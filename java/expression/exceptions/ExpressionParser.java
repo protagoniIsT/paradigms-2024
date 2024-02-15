@@ -2,6 +2,8 @@ package expression.exceptions;
 
 import expression.*;
 
+import javax.lang.model.type.UnknownTypeException;
+import javax.naming.InvalidNameException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,13 +13,11 @@ import static java.util.Collections.addAll;
 public class ExpressionParser implements TripleParser, ListParser {
     private String expression;
     private int index;
-    public final ArrayList<String> allowedVariables = new ArrayList<>();
+    public final List<String> allowedVariables = List.of("x", "y", "z");
 
-    public BasicExpressionInterface parse(String expression) {
-        if (allowedVariables.isEmpty()) {
-            allowedVariables.add("x");
-            allowedVariables.add("y");
-            allowedVariables.add("z");
+    public BasicExpressionInterface parse(String expression) throws InvalidNameException {
+        if (Variable.getVariables().isEmpty()) {
+            Variable.exportVariables(allowedVariables);
         }
         this.expression = expression;
         this.index = 0;
@@ -31,11 +31,11 @@ public class ExpressionParser implements TripleParser, ListParser {
         return parse(expression);
     }
 
-    public ArrayList<String> getVars() {
+    public List<String> getVars() {
         return allowedVariables;
     }
 
-    private BasicExpressionInterface parseExpression() {
+    private BasicExpressionInterface parseExpression() throws InvalidNameException {
         isCorrectBracketSequence();
         BasicExpressionInterface result = parseTerm();
         while (true) {
@@ -50,7 +50,7 @@ public class ExpressionParser implements TripleParser, ListParser {
         return result;
     }
 
-    private BasicExpressionInterface parseTerm() {
+    private BasicExpressionInterface parseTerm() throws InvalidNameException {
         BasicExpressionInterface result = parseFactor();
         while (true) {
             if (match('*')) {
@@ -64,7 +64,7 @@ public class ExpressionParser implements TripleParser, ListParser {
         return result;
     }
 
-    private BasicExpressionInterface parseFactor() {
+    private BasicExpressionInterface parseFactor() throws InvalidNameException {
         skipWhitespace();
         if (match('(')) {
             BasicExpressionInterface result = parseExpression();
@@ -103,11 +103,11 @@ public class ExpressionParser implements TripleParser, ListParser {
             }
             return createUnaryOperation(parseFactor(), operation);
         } else if (isOperator(peek())) {
-            throw new RuntimeException("Unexpected operator: " + peek() + " on position " + index);
+            throw new InvalidParameterException("Unexpected operator: " + peek() + " on position " + index);
         } else if (peek() != '\0') {
-            throw new RuntimeException("Unexpected character: " + peek() + " on position " + index);
+            throw new InvalidParameterException("Unexpected character: " + peek() + " on position " + index);
         } else {
-            throw new RuntimeException("Unexpected end of expression");
+            throw new InvalidParameterException("Unexpected end of expression");
         }
     }
 
@@ -131,7 +131,7 @@ public class ExpressionParser implements TripleParser, ListParser {
         try {
             return Integer.parseInt(number.toString());
         } catch (NumberFormatException e) {
-            throw new RuntimeException("Invalid number format: " + number, e);
+            throw new NumberFormatException("Invalid number format: " + number);
         }
     }
 
@@ -154,7 +154,7 @@ public class ExpressionParser implements TripleParser, ListParser {
             throw new InvalidParameterException("Invalid variable start at position " + index);
         }
         String variable = variableBuilder.toString();
-        if (!allowedVariables.contains(variable) && !isSpecialVariablePattern(variable)) {
+        if (!Variable.getVariables().containsKey(variable) && !isSpecialVariablePattern(variable)) {
             throw new InvalidParameterException("Invalid variable: " + variable + " at position " + index);
         }
         return variable;
@@ -169,7 +169,7 @@ public class ExpressionParser implements TripleParser, ListParser {
             case '^' -> new Xor((BasicExpressionInterface) leftOp, (BasicExpressionInterface) rightOp);
             case '|' -> new Or((BasicExpressionInterface) leftOp, (BasicExpressionInterface) rightOp);
             case '&' -> new And((BasicExpressionInterface) leftOp, (BasicExpressionInterface) rightOp);
-            default -> throw new RuntimeException("Unknown binary operator: " + operation);
+            default -> throw new IllegalStateException("Unknown binary operator: " + operation);
         };
     }
 
@@ -179,7 +179,7 @@ public class ExpressionParser implements TripleParser, ListParser {
             case "~" -> new Not(operand);
             case "log2" -> new CheckedLog2(operand);
             case "pow2" -> new CheckedPow2(operand);
-            default -> throw new RuntimeException("Unknown unary operator: " + operation);
+            default -> throw new IllegalStateException("Unknown unary operator: " + operation);
         };
     }
 
@@ -196,7 +196,10 @@ public class ExpressionParser implements TripleParser, ListParser {
     }
 
     private boolean isVariable(char c) {
-        for (String v : allowedVariables) {
+        if (c == 'x' || c == 'y' || c == 'z') {
+            return true;
+        }
+        for (String v : Variable.getVariables().keySet()) {
             if (v.contains(String.valueOf(c))) {
                 return true;
             }
@@ -249,37 +252,37 @@ public class ExpressionParser implements TripleParser, ListParser {
                 case ')' -> {
                     balance1--;
                     if (balance1 < 0) {
-                        throw new RuntimeException("Unmatched closing parenthesis found: )");
+                        throw new IllegalStateException("Unmatched closing parenthesis found: )");
                     }
                 }
                 case '{' -> balance2++;
                 case '}' -> {
                     balance2--;
                     if (balance2 < 0) {
-                        throw new RuntimeException("Unmatched closing parenthesis found: }");
+                        throw new IllegalStateException("Unmatched closing parenthesis found: }");
                     }
                 }
                 case '[' -> balance3++;
                 case ']' -> {
                     balance3--;
                     if (balance3 < 0) {
-                        throw new RuntimeException("Unmatched closing parenthesis found: ]");
+                        throw new IllegalStateException("Unmatched closing parenthesis found: ]");
                     }
                 }
                 default -> {}
             }
         }
         if (!(balance1 == 0 && balance2 == 0 && balance3 == 0)) {
-            throw new RuntimeException("Unmatched opening parenthesis found");
+            throw new IllegalStateException("Unmatched opening parenthesis found");
         }
     }
 
-    private void checkNextSymbolAfterVarOrNumber() {
+    private void checkNextSymbolAfterVarOrNumber() throws InvalidNameException {
         skipWhitespace();
         if (index < expression.length()) {
             char nextChar = expression.charAt(index);
             if (!isOperator(nextChar) && !isClosingBracket(nextChar)) {
-                throw new RuntimeException("Error while parsing: unexpected character '" + nextChar + "' after number or variable");
+                throw new InvalidNameException("Error while parsing: unexpected character '" + nextChar + "' after number or variable");
             }
         }
     }
@@ -301,7 +304,7 @@ public class ExpressionParser implements TripleParser, ListParser {
 
     private void expect(char expected) {
         if (peek() != expected) {
-            throw new RuntimeException("Expected '" + expected + "', actual: '" + peek() + "'");
+            throw new IllegalStateException("Expected '" + expected + "', actual: '" + peek() + "'");
         }
         movePointer();
     }

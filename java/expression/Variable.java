@@ -1,6 +1,7 @@
 package expression;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -9,15 +10,19 @@ public class Variable implements BasicExpressionInterface {
 
     private final int index;
 
-    private static List<String> allowedVariables = new ArrayList<>();
+    private static HashMap<String, Integer> allowedVariables = new HashMap<>();
 
     public static void exportVariables(List<String> vars) {
         if (vars != null) {
-            allowedVariables.addAll(vars);
+            for (int i = allowedVariables.size(); i < vars.size(); i++) {
+                if (!allowedVariables.containsKey(vars.get(i))) {
+                    allowedVariables.put(vars.get(i), i);
+                }
+            }
         }
     }
 
-    public static List<String> getVariables() {
+    public static HashMap<String, Integer> getVariables() {
         return allowedVariables;
     }
 
@@ -55,8 +60,8 @@ public class Variable implements BasicExpressionInterface {
         if (index != -1) {
             return variables.get(index);
         } else if (variable != null) {
-            if (allowedVariables.contains(variable)) {
-                return variables.get(allowedVariables.indexOf(variable));
+            if (allowedVariables.containsKey(variable)) {
+                return variables.get(allowedVariables.get(variable));
             }
         }
         return 0;
