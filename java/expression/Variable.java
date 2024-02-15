@@ -9,10 +9,16 @@ public class Variable implements BasicExpressionInterface {
 
     private final int index;
 
-    private static List<String> allowedVariables;
+    private static List<String> allowedVariables = new ArrayList<>();
 
     public static void exportVariables(List<String> vars) {
-        allowedVariables = vars;
+        if (vars != null) {
+            allowedVariables.addAll(vars);
+        }
+    }
+
+    public static List<String> getVariables() {
+        return allowedVariables;
     }
 
     public Variable(String variable) {
@@ -26,7 +32,7 @@ public class Variable implements BasicExpressionInterface {
 
     public Variable(int index) {
         this.index = index;
-        this.variable = "$" + index;
+        this.variable = null;
     }
 
     @Override

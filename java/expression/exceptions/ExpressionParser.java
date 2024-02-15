@@ -6,18 +6,19 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Collections.addAll;
+
 public class ExpressionParser implements TripleParser, ListParser {
     private String expression;
     private int index;
-    public final ArrayList<String> allowedVariables  = new ArrayList<>();
+    public final ArrayList<String> allowedVariables = new ArrayList<>();
 
-    public TripleExpression parse(String expression) {
+    public BasicExpressionInterface parse(String expression) {
         if (allowedVariables.isEmpty()) {
             allowedVariables.add("x");
             allowedVariables.add("y");
             allowedVariables.add("z");
         }
-        Variable.exportVariables(allowedVariables);
         this.expression = expression;
         this.index = 0;
         validateExpression();
@@ -27,7 +28,11 @@ public class ExpressionParser implements TripleParser, ListParser {
     @Override
     public ListExpression parse(String expression, List<String> variables) throws Exception {
         Variable.exportVariables(variables);
-        return (ListExpression) parse(expression);
+        return parse(expression);
+    }
+
+    public ArrayList<String> getVars() {
+        return allowedVariables;
     }
 
     private BasicExpressionInterface parseExpression() {
@@ -191,7 +196,12 @@ public class ExpressionParser implements TripleParser, ListParser {
     }
 
     private boolean isVariable(char c) {
-        return allowedVariables.contains(String.valueOf(c));
+        for (String v : allowedVariables) {
+            if (v.contains(String.valueOf(c))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isOperator(char c) {
@@ -206,6 +216,7 @@ public class ExpressionParser implements TripleParser, ListParser {
     private boolean isClosingBracket(char c) {
         return c == ')' || c == '}' || c == ']';
     }
+
     private boolean isBracket(char c) {
         return isOpeningBracket(c) || isClosingBracket(c);
     }
