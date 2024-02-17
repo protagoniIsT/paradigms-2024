@@ -8,8 +8,6 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.util.Collections.addAll;
-
 public class ExpressionParser implements TripleParser, ListParser {
     private String expression;
     private int index;
