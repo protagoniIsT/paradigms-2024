@@ -1,5 +1,5 @@
 package search;
-
+//Floyd-Hoare logic (Hoare triples)
 public class BinarySearchClosestA {
     //{Inv}: x in [a[left'], a[right']]
     //{Pred}: left = 0; right = a.length - 1;
