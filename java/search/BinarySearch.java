@@ -7,7 +7,7 @@ public class BinarySearch {
     public static int iterativeBinarySearch(int x, int[] a) {
         int left = 0;
         int right = a.length - 1;
-
+        //Floyd-Hoare logic (Hoare triples)
         /*
         forall i in [1, a.length - 1] : a[i - 1] >= a[i]
         x - integer && immutable
