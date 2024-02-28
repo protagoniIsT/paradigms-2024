@@ -44,11 +44,6 @@ public class ArrayQueueADT {
         queue.size++;
     }
 
-    public static int size(final ArrayQueueADT queue) {
-        Objects.requireNonNull(queue);
-        return queue.size;
-    }
-
     public static Object element(final ArrayQueueADT queue) {
         Objects.requireNonNull(queue);
         assert queue.size != 0;
@@ -63,6 +58,11 @@ public class ArrayQueueADT {
         queue.head = (queue.head + 1) % queue.elements.length;
         queue.size--;
         return deletedElement;
+    }
+
+    public static int size(final ArrayQueueADT queue) {
+        Objects.requireNonNull(queue);
+        return queue.size;
     }
 
     public static boolean isEmpty(final ArrayQueueADT queue) {

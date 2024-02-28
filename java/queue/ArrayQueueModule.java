@@ -44,11 +44,6 @@ public class ArrayQueueModule {
         size++;
     }
 
-    public static int size() {
-        Objects.requireNonNull(elements);
-        return size;
-    }
-
     public static Object element() {
         Objects.requireNonNull(elements);
         assert size != 0;
@@ -63,6 +58,11 @@ public class ArrayQueueModule {
         head = (head + 1) % elements.length;
         size--;
         return deletedElement;
+    }
+
+    public static int size() {
+        Objects.requireNonNull(elements);
+        return size;
     }
 
     public static boolean isEmpty() {
