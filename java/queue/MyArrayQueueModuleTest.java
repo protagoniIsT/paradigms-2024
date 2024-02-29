@@ -1,6 +1,6 @@
 package queue;
 
-public class ArrayQueueModuleTest {
+public class MyArrayQueueModuleTest {
     public static void fill() {
         for (int i = 0; i < 10; i++) {
             ArrayQueueModule.enqueue("e" + i);

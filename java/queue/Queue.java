@@ -24,7 +24,7 @@ public interface Queue {
     Object element();
 
     /*
-       Pred: elements != null
+       Pre: elements != null
        Post: size' == 0 && head' == 0 && tail' == 0
     */
     void clear();
@@ -40,4 +40,6 @@ public interface Queue {
        Post: R = (size = 0) && size' = size && immutable(size)
     */
     boolean isEmpty();
+
+    void distinct();
 }

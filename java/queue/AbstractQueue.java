@@ -5,33 +5,39 @@ import java.util.Objects;
 public abstract class AbstractQueue implements Queue {
     protected int size;
 
-    protected abstract void enqueueLinkedQueue(Object element);
+    protected abstract void enqueueLinked(Object element);
 
-    protected abstract Object dequeueLinkedQueue();
+    protected abstract Object dequeueLinked();
 
-    protected abstract Object elementLinkedQueue();
+    protected abstract Object elementLinked();
 
-    protected abstract void clearLinkedQueue();
+    protected abstract void clearLinked();
+
+    protected abstract void distinctLinked();
 
     public void enqueue(Object element) {
         Objects.requireNonNull(element);
-        enqueueLinkedQueue(element);
+        enqueueLinked(element);
         size++;
     }
 
     public Object dequeue() {
         assert size != 0;
         size--;
-        return dequeueLinkedQueue();
+        return dequeueLinked();
     }
 
     public Object element() {
         assert size != 0;
-        return elementLinkedQueue();
+        return elementLinked();
+    }
+
+    public void distinct() {
+        distinctLinked();
     }
 
     public void clear() {
-        clearLinkedQueue();
+        clearLinked();
         size = 0;
     }
 

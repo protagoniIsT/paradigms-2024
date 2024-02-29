@@ -1,5 +1,7 @@
 package queue;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.function.Predicate;
 /*
@@ -110,35 +112,63 @@ public class ArrayQueue extends AbstractQueue {
     }
 
     /*
+     Pre: unique(elements).length < elements.length
+     Post: unique(elements) == elements && size' = size && immutable(size)
+    */
+    @Override
+    public void distinct() {
+        HashSet<Object> set = new HashSet<>();
+        Object[] newElements = new Object[elements.length];
+        int newTail = 0;
+        for (int i = 0; i < size; i++) {
+            int index = (head + i) % elements.length;
+            if (set.add(elements[index])) {
+                newElements[newTail++] = elements[index];
+            }
+        }
+        elements = newElements;
+        head = 0;
+        tail = newTail;
+        size = set.size();
+    }
+
+
+    /*
      Pred: elements != null
      Post: size' == 0 && head' == 0 && tail' == 0
     */
     public void clear() {
         Objects.requireNonNull(elements);
         elements = new Object[BASE_ARRAY_CAPACITY];
+        Arrays.fill(elements, null);
         head = 0;
         tail = 0;
         size = 0;
     }
 
     @Override
-    protected void enqueueLinkedQueue(Object element) {
+    protected void enqueueLinked(Object element) {
         enqueue(element);
     }
 
     @Override
-    protected Object dequeueLinkedQueue() {
+    protected Object dequeueLinked() {
         return dequeue();
     }
 
     @Override
-    protected Object elementLinkedQueue() {
+    protected Object elementLinked() {
         return element();
     }
 
     @Override
-    protected void clearLinkedQueue() {
+    protected void clearLinked() {
         clear();
+    }
+
+    @Override
+    protected void distinctLinked() {
+        distinct();
     }
 
     /*

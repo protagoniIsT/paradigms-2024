@@ -1,5 +1,6 @@
 package queue;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Predicate;
 
@@ -73,6 +74,7 @@ public class ArrayQueueADT {
     public static void clear(final ArrayQueueADT queue) {
         Objects.requireNonNull(queue);
         queue.elements = new Object[BASE_ARRAY_CAPACITY];
+        Arrays.fill(queue.elements, null);
         queue.head = 0;
         queue.tail = 0;
         queue.size = 0;

@@ -1,5 +1,6 @@
 package queue;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Predicate;
 
@@ -73,6 +74,7 @@ public class ArrayQueueModule {
     public static void clear() {
         Objects.requireNonNull(elements);
         elements = new Object[BASE_ARRAY_CAPACITY];
+        Arrays.fill(elements, null);
         head = 0;
         tail = 0;
         size = 0;

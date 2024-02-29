@@ -1,6 +1,6 @@
 package queue;
 
-public class ArrayQueueADTTest {
+public class MyArrayQueueADTTest {
     public static void fill(ArrayQueueADT queue) {
         for (int i = 0; i < 10; i++) {
             ArrayQueueADT.enqueue(queue, "e" + i);

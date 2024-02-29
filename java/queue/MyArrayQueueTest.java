@@ -1,9 +1,11 @@
 package queue;
 
-public class ArrayQueueTest {
+import java.util.Arrays;
+
+public class MyArrayQueueTest {
     public static void fill(ArrayQueue queue) {
-        for (int i = 0; i < 10; i++) {
-            queue.enqueue("e" + i);
+        for (int i = 0; i < 16; i++) {
+            queue.enqueue("e" + i % 4);
         }
     }
 
@@ -20,6 +22,10 @@ public class ArrayQueueTest {
     public static void main(String[] args) {
         ArrayQueue queue = new ArrayQueue();
         fill(queue);
-        dump(queue);
+//        dump(queue);
+        System.out.println(Arrays.toString(queue.elements));
+        queue.distinct();
+        System.out.println(queue.size());
+        System.out.println(Arrays.toString(queue.elements));
     }
 }
