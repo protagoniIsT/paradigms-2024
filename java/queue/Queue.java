@@ -41,5 +41,9 @@ public interface Queue {
     */
     boolean isEmpty();
 
+    /*
+     Pre: unique(elements).length < elements.length
+     Post: unique(elements) == elements && size' = size && immutable(size)
+    */
     void distinct();
 }

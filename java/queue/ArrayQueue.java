@@ -10,8 +10,8 @@ import java.util.function.Predicate;
     Let immutable(n): for i = 0..(n - 1): a'[i] == a[i]
 */
 public class ArrayQueue extends AbstractQueue {
-    private final int BASE_ARRAY_CAPACITY = 16;
-    public Object[] elements = new Object[BASE_ARRAY_CAPACITY];
+    private final int DEFAULT_INITIAL_CAPACITY = 16;
+    public Object[] elements = new Object[DEFAULT_INITIAL_CAPACITY];
 
     private int head;
 
@@ -111,10 +111,6 @@ public class ArrayQueue extends AbstractQueue {
         return size == 0;
     }
 
-    /*
-     Pre: unique(elements).length < elements.length
-     Post: unique(elements) == elements && size' = size && immutable(size)
-    */
     @Override
     public void distinct() {
         HashSet<Object> set = new HashSet<>();
@@ -139,7 +135,7 @@ public class ArrayQueue extends AbstractQueue {
     */
     public void clear() {
         Objects.requireNonNull(elements);
-        elements = new Object[BASE_ARRAY_CAPACITY];
+        elements = new Object[DEFAULT_INITIAL_CAPACITY];
         Arrays.fill(elements, null);
         head = 0;
         tail = 0;

@@ -5,8 +5,8 @@ import java.util.Objects;
 import java.util.function.Predicate;
 
 public class ArrayQueueADT {
-    private static final int BASE_ARRAY_CAPACITY = 16;
-    public Object[] elements = new Object[BASE_ARRAY_CAPACITY];
+    private static final int DEFAULT_INITIAL_CAPACITY = 16;
+    public Object[] elements = new Object[DEFAULT_INITIAL_CAPACITY];
 
     private int head;
 
@@ -73,7 +73,7 @@ public class ArrayQueueADT {
 
     public static void clear(final ArrayQueueADT queue) {
         Objects.requireNonNull(queue);
-        queue.elements = new Object[BASE_ARRAY_CAPACITY];
+        queue.elements = new Object[DEFAULT_INITIAL_CAPACITY];
         Arrays.fill(queue.elements, null);
         queue.head = 0;
         queue.tail = 0;

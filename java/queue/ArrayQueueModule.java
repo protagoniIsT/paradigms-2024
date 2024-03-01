@@ -5,9 +5,9 @@ import java.util.Objects;
 import java.util.function.Predicate;
 
 public class ArrayQueueModule {
-    private static final int BASE_ARRAY_CAPACITY = 16;
+    private static final int DEFAULT_INITIAL_CAPACITY = 16;
 
-    public static Object[] elements = new Object[BASE_ARRAY_CAPACITY];
+    public static Object[] elements = new Object[DEFAULT_INITIAL_CAPACITY];
 
     private static int head;
     private static int tail;
@@ -73,7 +73,7 @@ public class ArrayQueueModule {
 
     public static void clear() {
         Objects.requireNonNull(elements);
-        elements = new Object[BASE_ARRAY_CAPACITY];
+        elements = new Object[DEFAULT_INITIAL_CAPACITY];
         Arrays.fill(elements, null);
         head = 0;
         tail = 0;
