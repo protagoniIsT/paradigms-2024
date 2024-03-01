@@ -111,10 +111,6 @@ public class ArrayQueue extends AbstractQueue {
         return size == 0;
     }
 
-    /*
-     Pre: unique(elements).length < elements.length
-     Post: unique(elements) == elements && size' = size && immutable(size)
-    */
     @Override
     public void distinct() {
         HashSet<Object> set = new HashSet<>();
