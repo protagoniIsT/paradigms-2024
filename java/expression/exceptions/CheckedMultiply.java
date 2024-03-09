@@ -11,10 +11,11 @@ public class CheckedMultiply extends Multiply implements TripleExpression {
 
     @Override
     protected int calculate(int firstOperand, int secondOperand) {
-        long result = (long) firstOperand * (long) secondOperand;
-        if (result > Integer.MAX_VALUE || result < Integer.MIN_VALUE) {
+        final int result = firstOperand * secondOperand;
+        if (secondOperand != 0 && result / secondOperand != firstOperand
+                || firstOperand != 0 && result / firstOperand != secondOperand) {
             throw new ArithmeticException("Overflow");
         }
-        return (int) result;
+        return firstOperand * secondOperand;
     }
 }

@@ -32,10 +32,9 @@ public abstract class AbstractBinaryOperation implements BasicExpressionInterfac
 
     @Override
     public String toString() {
-        StringBuilder exp = new StringBuilder();
-        exp.append("(").append(firstExpression.toString()).append(this.getOperator())
-                       .append(secondExpression.toString()).append(")");
-        return exp.toString();
+        String exp = "(" + firstExpression.toString() + this.getOperator() +
+                secondExpression.toString() + ")";
+        return exp;
     }
 
     @Override

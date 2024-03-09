@@ -12,7 +12,7 @@ public class Negate implements BasicExpressionInterface {
 
     @Override
     public int evaluate(int value) {
-        return  -value;
+        return -value;
     }
 
     @Override

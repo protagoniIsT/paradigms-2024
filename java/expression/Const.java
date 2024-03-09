@@ -43,8 +43,7 @@ public class Const implements BasicExpressionInterface {
     }
 
     @Override
-    public int
-    evaluate(List<Integer> variables) {
+    public int evaluate(List<Integer> variables) {
         return this.value;
     }
 }
