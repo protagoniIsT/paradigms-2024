@@ -5,12 +5,13 @@ import java.util.Objects;
 import java.util.function.Predicate;
 
 public class ArrayQueueModule {
+
     private static final int DEFAULT_INITIAL_CAPACITY = 16;
 
     public static Object[] elements = new Object[DEFAULT_INITIAL_CAPACITY];
 
     private static int head;
-    private static int tail;
+
     private static int size;
 
     public static int indexIf(Predicate<Object> predicate) {
@@ -25,10 +26,10 @@ public class ArrayQueueModule {
     }
 
     public static int lastIndexIf(Predicate<Object> predicate) {
-        int index = (tail - 1 + elements.length) % elements.length;
+        int index = (head + size - 1) % elements.length;
         for (int i = size - 1; i >= 0; i--) {
             if (predicate.test(elements[index])) {
-                return (index - head + elements.length) % elements.length;
+                return i;
             }
             index = (index - 1 + elements.length) % elements.length;
         }
@@ -38,10 +39,8 @@ public class ArrayQueueModule {
 
     public static void enqueue(Object element) {
         Objects.requireNonNull(element);
-        Objects.requireNonNull(elements);
         ensureCapacity();
-        elements[tail] = element;
-        tail = (tail + 1) % elements.length;
+        elements[(head + size) % elements.length] = element;
         size++;
     }
 
@@ -73,10 +72,8 @@ public class ArrayQueueModule {
 
     public static void clear() {
         Objects.requireNonNull(elements);
-        elements = new Object[DEFAULT_INITIAL_CAPACITY];
         Arrays.fill(elements, null);
         head = 0;
-        tail = 0;
         size = 0;
     }
 
@@ -88,16 +85,11 @@ public class ArrayQueueModule {
     }
 
     private static void increaseQueueCapacity() {
-        Objects.requireNonNull(elements);
-        Object[] resizedElements = new Object[elements.length * 2 + 1];
-        if (head < tail) {
-            System.arraycopy(elements, head, resizedElements, 0, size);
-        } else {
-            System.arraycopy(elements, head, resizedElements, 0, elements.length - head);
-            System.arraycopy(elements, 0, resizedElements, elements.length - head, tail);
-        }
+        Object[] resizedElements = new Object[elements.length * 3 / 2 + 1];
+        int firstPartLength = Math.min(size, elements.length - head);
+        System.arraycopy(elements, head, resizedElements, 0, firstPartLength);
+        System.arraycopy(elements, 0, resizedElements, firstPartLength, size - firstPartLength);
         elements = resizedElements;
         head = 0;
-        tail = size;
     }
 }

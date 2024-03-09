@@ -4,18 +4,19 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.function.Predicate;
+
 /*
     Model: a[0]...a[n - 1]
     Inv: for i = 0..(actualQueueSize - 1): a[i] != null
     Let immutable(n): for i = 0..(n - 1): a'[i] == a[i]
 */
 public class ArrayQueue extends AbstractQueue {
+
     private final int DEFAULT_INITIAL_CAPACITY = 16;
+
     public Object[] elements = new Object[DEFAULT_INITIAL_CAPACITY];
 
     private int head;
-
-    private int tail;
 
     private int size;
 
@@ -41,10 +42,10 @@ public class ArrayQueue extends AbstractQueue {
      Post: R = index && index == min(A)
     */
     public int lastIndexIf(Predicate<Object> predicate) {
-        int index = (tail - 1 + elements.length) % elements.length;
+        int index = (head + size - 1) % elements.length;
         for (int i = size - 1; i >= 0; i--) {
             if (predicate.test(elements[index])) {
-                return (index - head + elements.length) % elements.length;
+                return i;
             }
             index = (index - 1 + elements.length) % elements.length;
         }
@@ -55,18 +56,14 @@ public class ArrayQueue extends AbstractQueue {
          Pre: element != null
          Post: size' = size + 1 &&
                tail' = (tail + 1) % elements.length &&
-               elements'[n'] = element &&
-               immutable(size)
+               elements'[n'] = element
     */
     public void enqueue(Object element) {
         Objects.requireNonNull(element);
-        Objects.requireNonNull(elements);
         ensureCapacity();
-        elements[tail] = element;
-        tail = (tail + 1) % elements.length;
+        elements[(head + size) % elements.length] = element;
         size++;
     }
-
 
     /*
      Pre: n > 0
@@ -80,7 +77,7 @@ public class ArrayQueue extends AbstractQueue {
 
     /*
      Pre: size' > 0
-     Post: R = elements[head] && head' = (head' + 1) % elements.length && immutable(size)
+     Post: R = elements[head] && head' = (head' + 1) % elements.length
     */
     public Object dequeue() {
         Objects.requireNonNull(elements);
@@ -101,7 +98,6 @@ public class ArrayQueue extends AbstractQueue {
         return size;
     }
 
-
     /*
      Pre: true
      Post: R = (size = 0) && size' = size && immutable(size)
@@ -114,56 +110,53 @@ public class ArrayQueue extends AbstractQueue {
     @Override
     public void distinct() {
         HashSet<Object> set = new HashSet<>();
-        Object[] newElements = new Object[elements.length];
-        int newTail = 0;
+        int newTail = head;
         for (int i = 0; i < size; i++) {
             int index = (head + i) % elements.length;
             if (set.add(elements[index])) {
-                newElements[newTail++] = elements[index];
+                elements[newTail] = elements[index];
+                newTail = (newTail + 1) % elements.length;
             }
         }
-        elements = newElements;
-        head = 0;
-        tail = newTail;
+        for (int i = set.size(); i < size; i++) {
+            elements[(head + i) % elements.length] = null;
+        }
         size = set.size();
     }
 
-
     /*
      Pred: elements != null
-     Post: size' == 0 && head' == 0 && tail' == 0
+     Post: size' == tail' == 0 && head' == 0
     */
     public void clear() {
         Objects.requireNonNull(elements);
-        elements = new Object[DEFAULT_INITIAL_CAPACITY];
         Arrays.fill(elements, null);
         head = 0;
-        tail = 0;
         size = 0;
     }
 
     @Override
-    protected void enqueueLinked(Object element) {
+    protected void enqueueImpl(Object element) {
         enqueue(element);
     }
 
     @Override
-    protected Object dequeueLinked() {
+    protected Object dequeueImpl() {
         return dequeue();
     }
 
     @Override
-    protected Object elementLinked() {
+    protected Object elementImpl() {
         return element();
     }
 
     @Override
-    protected void clearLinked() {
+    protected void clearImpl() {
         clear();
     }
 
     @Override
-    protected void distinctLinked() {
+    protected void distinctImpl() {
         distinct();
     }
 
@@ -179,16 +172,11 @@ public class ArrayQueue extends AbstractQueue {
     }
 
     private void increaseQueueCapacity() {
-        Objects.requireNonNull(elements);
         Object[] resizedElements = new Object[elements.length * 3 / 2 + 1];
-        if (tail > head) {
-            System.arraycopy(elements, head, resizedElements, 0, size);
-        } else {
-            System.arraycopy(elements, head, resizedElements, 0, elements.length - head);
-            System.arraycopy(elements, 0, resizedElements, elements.length - head, tail);
-        }
+        int firstPartLength = Math.min(size, elements.length - head);
+        System.arraycopy(elements, head, resizedElements, 0, firstPartLength);
+        System.arraycopy(elements, 0, resizedElements, firstPartLength, size - firstPartLength);
         elements = resizedElements;
         head = 0;
-        tail = size;
     }
 }

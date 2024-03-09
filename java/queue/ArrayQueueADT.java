@@ -5,12 +5,12 @@ import java.util.Objects;
 import java.util.function.Predicate;
 
 public class ArrayQueueADT {
+
     private static final int DEFAULT_INITIAL_CAPACITY = 16;
+
     public Object[] elements = new Object[DEFAULT_INITIAL_CAPACITY];
 
     private int head;
-
-    private int tail;
 
     private int size;
 
@@ -26,10 +26,10 @@ public class ArrayQueueADT {
     }
 
     public static int lastIndexIf(final ArrayQueueADT queue, Predicate<Object> predicate) {
-        int index = (queue.tail - 1 + queue.elements.length) % queue.elements.length;
+        int index = (queue.head + queue.size - 1) % queue.elements.length;
         for (int i = queue.size - 1; i >= 0; i--) {
             if (predicate.test(queue.elements[index])) {
-                return (index - queue.head + queue.elements.length) % queue.elements.length;
+                return i;
             }
             index = (index - 1 + queue.elements.length) % queue.elements.length;
         }
@@ -40,8 +40,7 @@ public class ArrayQueueADT {
         Objects.requireNonNull(element);
         Objects.requireNonNull(queue);
         ensureCapacity(queue);
-        queue.elements[queue.tail] = element;
-        queue.tail = (queue.tail + 1) % queue.elements.length;
+        queue.elements[(queue.head + queue.size) % queue.elements.length] = element;
         queue.size++;
     }
 
@@ -72,11 +71,9 @@ public class ArrayQueueADT {
     }
 
     public static void clear(final ArrayQueueADT queue) {
-        Objects.requireNonNull(queue);
-        queue.elements = new Object[DEFAULT_INITIAL_CAPACITY];
+        Objects.requireNonNull(queue.elements);
         Arrays.fill(queue.elements, null);
         queue.head = 0;
-        queue.tail = 0;
         queue.size = 0;
     }
 
@@ -88,16 +85,11 @@ public class ArrayQueueADT {
     }
 
     private static void increaseQueueCapacity(final ArrayQueueADT queue) {
-        Objects.requireNonNull(queue);
         Object[] resizedElements = new Object[queue.elements.length * 3 / 2 + 1];
-        if (queue.tail > queue.head) {
-            System.arraycopy(queue.elements, queue.head, resizedElements, 0, queue.size);
-        } else {
-            System.arraycopy(queue.elements, queue.head, resizedElements, 0, queue.elements.length - queue.head);
-            System.arraycopy(queue.elements, 0, resizedElements, queue.elements.length - queue.head, queue.tail);
-        }
+        int firstPartLength = Math.min(queue.size, queue.elements.length - queue.head);
+        System.arraycopy(queue.elements, queue.head, resizedElements, 0, firstPartLength);
+        System.arraycopy(queue.elements, 0, resizedElements, firstPartLength, queue.size - firstPartLength);
         queue.elements = resizedElements;
         queue.head = 0;
-        queue.tail = queue.size;
     }
 }

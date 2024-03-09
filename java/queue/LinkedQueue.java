@@ -1,7 +1,6 @@
 package queue;
 
 import java.util.HashSet;
-import java.util.Objects;
 
 public class LinkedQueue extends AbstractQueue {
 
@@ -10,21 +9,21 @@ public class LinkedQueue extends AbstractQueue {
     private Node tail;
 
     public LinkedQueue() {
-        clearLinked();
+        clearImpl();
     }
 
-    public void enqueueLinked(Object element) {
+    public void enqueueImpl(Object element) {
         tail.value = element;
         Node lastTail = tail;
         tail = new Node(null, null);
         lastTail.nextNode = tail;
     }
 
-    public Object elementLinked() {
+    public Object elementImpl() {
         return head.nextNode.value;
     }
 
-    public Object dequeueLinked() {
+    public Object dequeueImpl() {
         Object element = head.nextNode.value;
         assert element != null;
         head = head.nextNode;
@@ -32,12 +31,12 @@ public class LinkedQueue extends AbstractQueue {
         return element;
     }
 
-    public void clearLinked() {
+    public void clearImpl() {
         tail = new Node(null, null);
         head = new Node(null, tail);
     }
 
-    public void distinctLinked() {
+    public void distinctImpl() {
         HashSet<Object> set = new HashSet<>();
         Node currNode = head.nextNode;
         Node prevNode = head;
@@ -55,9 +54,9 @@ public class LinkedQueue extends AbstractQueue {
         size = set.size();
     }
 
-
     private static class Node {
         private Object value;
+
         private Node nextNode;
 
         public Node(Object value, Node nextNode) {

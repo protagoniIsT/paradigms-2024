@@ -6,14 +6,13 @@ public interface Queue {
          Pre: element != null
          Post: size' = size + 1 &&
                tail' = (tail + 1) % elements.length &&
-               elements'[n'] = element &&
-               immutable(size)
+               elements'[n'] = element
     */
     void enqueue(Object element);
 
     /*
        Pre: size' > 0
-       Post: R = elements[head] && head' = (head' + 1) % elements.length && immutable(size)
+       Post: R = elements[head] && head' = (head' + 1) % elements.length
     */
     Object dequeue();
 
@@ -43,7 +42,9 @@ public interface Queue {
 
     /*
      Pre: unique(elements).length < elements.length
-     Post: unique(elements) == elements && size' = size && immutable(size)
+     Post: unique(elements) == elements
+           && size' = size
+           && forall i [0..unique(elements).length - 2] : elements.indexOf(unique(elements)[i]) < elements.indexOf(unique(elements)[i + 1])
     */
     void distinct();
 }
