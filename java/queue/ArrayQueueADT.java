@@ -72,7 +72,7 @@ public class ArrayQueueADT {
 
     public static void clear(final ArrayQueueADT queue) {
         Objects.requireNonNull(queue.elements);
-        Arrays.fill(queue.elements, null);
+        Arrays.fill(queue.elements, 0, queue.size,  null);
         queue.head = 0;
         queue.size = 0;
     }

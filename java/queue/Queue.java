@@ -42,9 +42,7 @@ public interface Queue {
 
     /*
      Pre: unique(elements).length < elements.length
-     Post: unique(elements) == elements
-           && size' = size
-           && forall i [0..unique(elements).length - 2] : elements.indexOf(unique(elements)[i]) < elements.indexOf(unique(elements)[i + 1])
+     Post: forall i [0..unique(elements).length - 2] : elements.indexOf(unique(elements)[i]) < elements.indexOf(unique(elements)[i + 1])
     */
     void distinct();
 }

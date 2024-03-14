@@ -72,7 +72,7 @@ public class ArrayQueueModule {
 
     public static void clear() {
         Objects.requireNonNull(elements);
-        Arrays.fill(elements, null);
+        Arrays.fill(elements, 0, size, null);
         head = 0;
         size = 0;
     }
