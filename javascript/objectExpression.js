@@ -40,13 +40,13 @@ function operationFactory(evaluateFunc, symbol) {
     return Operation;
 }
 
-const Add = operationFactory((a, b) => a + b, "+");
+const Add = operationFactory((...args) => args.reduce((a, b) => a + b), "+");
 
-const Subtract = operationFactory((a, b) => a - b, "-");
+const Subtract = operationFactory((...args) => args.reduce((a, b) => a - b), "-");
 
-const Multiply = operationFactory((a, b) => a * b, "*");
+const Multiply = operationFactory((...args) => args.reduce((a, b) => a * b), "*");
 
-const Divide = operationFactory((a, b) => a / b, "/");
+const Divide = operationFactory((...args) => args.reduce((a, b) => a / b), "/");
 
 const Negate = operationFactory(a => -a, "negate");
 
@@ -71,17 +71,17 @@ function parse(expression) {
         if (!isNaN(token)) {
             stack.push(new Const(token));
         } else {
-            const operation = operations[token];
-            if (operation === undefined) {
+            const operationSignature = operations[token];
+            if (operationSignature === undefined) {
                 stack.push(new Variable(token));
-            } else if (operation[1] === 1) {
-                const Op = operation[0];
-                const operand = stack.pop();
-                stack.push(new Op(operand));
             } else {
-                const Op = operation[0];
-                const rightOperand = stack.pop(), leftOperand = stack.pop();
-                stack.push(new Op(leftOperand, rightOperand));
+                const Op = operationSignature[0];
+                const arity = operationSignature[1];
+                let operands = [];
+                for (let i = 0; i < arity; i++) {
+                    operands.unshift(stack.pop());
+                }
+                stack.push(new Op(...operands));
             }
         }
     });
