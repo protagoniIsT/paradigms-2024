@@ -1,35 +1,25 @@
 "use strict"
 
+const variables = ['x', 'y', 'z'];
+
 function Const(value) {
     this.evaluate = function() { return Number(value); };
     this.toString = function() { return value.toString(); };
+    this.prefix = function() { return value.toString(); };
 }
 
 function Variable(name) {
-    this.evaluate = function(...args) {
-        switch (name) {
-            case "x":
-                return args[0];
-            case "y":
-                return args[1];
-            case "z":
-                return args[2];
-        }
-    };
+    this.evaluate = function(...args) { return(args[variables.indexOf(name)]); };
     this.toString = function() { return name; };
+    this.prefix = function() { return name; };
 }
 
-function Operation() {}
+let operations = new Map();
 
-Operation.prototype.evaluate = function(...args) {};
-
-Operation.prototype.toString = function() {};
-
-function operationFactory(evaluateFunc, symbol) {
+function operationFactory(evaluateFunc, symbol, arity) {
     function Operation(...operands) {
         this.operands = operands;
     }
-    Operation.prototype = Object.create(Operation.prototype);
     Operation.prototype.constructor = Operation;
     Operation.prototype.evaluate = function(...args) {
         return evaluateFunc(...this.operands.map(operand => operand.evaluate(...args)));
@@ -37,32 +27,33 @@ function operationFactory(evaluateFunc, symbol) {
     Operation.prototype.toString = function() {
         return this.operands.map(operand => operand.toString()).join(" ") + " " + symbol;
     };
+    Operation.prototype.prefix = function() {
+        return "(" + symbol + " " + this.operands.map(operand => operand.prefix()).join(" ") + ")";
+    };
+    operations.set(symbol, [Operation, arity]);
     return Operation;
 }
 
-const Add = operationFactory((...args) => args.reduce((a, b) => a + b), "+");
+const Add = operationFactory((...args) => args.reduce((a, b) => a + b), "+", 2);
 
-const Subtract = operationFactory((...args) => args.reduce((a, b) => a - b), "-");
+const Subtract = operationFactory((...args) => args.reduce((a, b) => a - b), "-", 2);
 
-const Multiply = operationFactory((...args) => args.reduce((a, b) => a * b), "*");
+const Multiply = operationFactory((...args) => args.reduce((a, b) => a * b), "*", 2);
 
-const Divide = operationFactory((...args) => args.reduce((a, b) => a / b), "/");
+const Divide = operationFactory((...args) => args.reduce((a, b) => a / b), "/", 2);
 
-const Negate = operationFactory(a => -a, "negate");
+const Negate = operationFactory(a => -a, "negate", 1);
 
-const Sinh = operationFactory(Math.sinh, "sinh");
+const Sinh = operationFactory(Math.sinh, "sinh", 1);
 
-const Cosh = operationFactory(Math.cosh, "cosh");
+const Cosh = operationFactory(Math.cosh, "cosh", 1);
 
-const operations = {
-    "+": [Add, 2],
-    "-": [Subtract, 2],
-    "*": [Multiply, 2],
-    "/": [Divide, 2],
-    "negate": [Negate, 1],
-    "sinh": [Sinh, 1],
-    "cosh": [Cosh, 1]
-};
+const Product = operationFactory((...args) => args.reduce((a, b) => a * b, 1), "product", undefined);
+
+const Geom = operationFactory((...args) => {
+    const product = args.reduce((a, b) => Math.abs(a * b), 1);
+    return Math.pow(product, 1 / args.length);
+}, "geom", undefined);
 
 function parse(expression) {
     const tokens = expression.split(" ").filter(token => token.length);
@@ -71,7 +62,7 @@ function parse(expression) {
         if (!isNaN(token)) {
             stack.push(new Const(token));
         } else {
-            const operationSignature = operations[token];
+            const operationSignature = operations.get(token);
             if (operationSignature === undefined) {
                 stack.push(new Variable(token));
             } else {
@@ -86,4 +77,91 @@ function parse(expression) {
         }
     });
     return stack.pop();
+}
+
+
+function customErrorFactory(name) {
+    function CustomError(message) {
+        Error.call(this, message);
+        this.name = name;
+        this.message = message;
+    }
+    CustomError.prototype = Object.create(Error.prototype);
+    CustomError.prototype.constructor = CustomError;
+    return CustomError;
+}
+
+const IncorrectBracketSequenceError = customErrorFactory("IncorrectBracketSequenceError");
+
+const UnknownOperationError = customErrorFactory("UnknownOperationError");
+
+const UnknownVariableError = customErrorFactory("UnknownVariableError");
+
+const InvalidExpression = customErrorFactory("InvalidExpression");
+
+const InvalidArgumentsError = customErrorFactory("InvalidArgumentsError");
+
+const EmptyInputError = customErrorFactory("EmptyInputError");
+
+const MissingOperationError = customErrorFactory("MissingOperationError");
+
+function isCorrectBracketSequence(expression) {
+    let balance = 0;
+    for (let i = 0; i < expression.length; i++) {
+        if (expression[i] === '(') {
+            balance++;
+        } else if (expression[i] === ')') {
+            balance--;
+        }
+        if (balance < 0) {
+            throw new IncorrectBracketSequenceError("Unmatched bracket '${expression[i]}' found on position '${i}'");
+        }
+    }
+    return balance === 0;
+}
+
+function parsePrefix(expression) {
+    if (expression.length === 0) {
+        throw new EmptyInputError("Empty input");
+    }
+    let i = 0;
+    isCorrectBracketSequence(expression);
+    let tokens = expression.match(/\(|\)|[^\s()]+/g);
+    if (tokens.length > 1 && variables.includes(tokens[0])) {
+        throw new InvalidExpression(`Expression cannot start with variable (${tokens[0]})`);
+    }
+
+    function parseToken(tokens) {
+        let token = tokens.shift();
+        if (token === '(') {
+            let op = tokens.shift();
+            let operands = [];
+            while (tokens[0] !== ')') {
+                operands.push(parseToken(tokens));
+            }
+            tokens.shift();
+            if (operations.get(op) === undefined) {
+                throw new UnknownOperationError("Unknown operation: " + op);
+            }
+            if (operations.get(op)[1] !== undefined && operands.length !== operations.get(op)[1]) {
+                throw new InvalidArgumentsError(`Operation ${op} should have ${operations[op][1]} operands`);  // :NOTE: which op?
+            }
+            const operationSignature = operations.get(op);
+            const Op = operationSignature[0];
+            return new Op(...operands);
+        } else if (!isNaN(token)) {
+            return new Const(token);
+        } else {
+            if (!(variables.includes(token))) {
+                throw new UnknownVariableError(`Unknown variable: ${token}`);
+            }
+            return new Variable(token);
+        }
+    }
+
+    let res = parseToken(tokens);
+    if (tokens.length > 0) {
+        throw new InvalidExpression(`Unexpected tokens after valid expression: ${tokens.join(" ")}`);
+    }
+    return res;
 }
