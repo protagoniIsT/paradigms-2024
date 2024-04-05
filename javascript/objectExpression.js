@@ -144,7 +144,7 @@ function parsePrefix(expression) {
                 throw new UnknownOperationError("Unknown operation: " + op);
             }
             if (operations.get(op)[1] !== undefined && operands.length !== operations.get(op)[1]) {
-                throw new InvalidArgumentsError(`Operation ${op} should have ${operations[op][1]} operands`);  // :NOTE: which op?
+                throw new InvalidArgumentsError(`Operation ${op} should have ${operations[op][1]} operands`);
             }
             const operationSignature = operations.get(op);
             const Op = operationSignature[0];
