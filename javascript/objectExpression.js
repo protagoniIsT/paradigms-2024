@@ -3,57 +3,69 @@
 const variables = ['x', 'y', 'z'];
 
 function Const(value) {
-    this.evaluate = function() { return Number(value); };
-    this.toString = function() { return value.toString(); };
-    this.prefix = function() { return value.toString(); };
+    this.evaluate = function () {
+        return Number(value);
+    };
+    this.toString = function () {
+        return value.toString();
+    };
+    this.prefix = function () {
+        return value.toString();
+    };
 }
 
 function Variable(name) {
-    this.evaluate = function(...args) { return(args[variables.indexOf(name)]); };
-    this.toString = function() { return name; };
-    this.prefix = function() { return name; };
+    this.evaluate = function (...args) {
+        return (args[variables.indexOf(name)]);
+    };
+    this.toString = function () {
+        return name;
+    };
+    this.prefix = function () {
+        return name;
+    };
 }
 
 let operations = new Map();
 
-function operationFactory(evaluateFunc, symbol, arity) {
+function operationFactory(evaluateFunc, symbol) {
     function Operation(...operands) {
         this.operands = operands;
     }
     Operation.prototype.constructor = Operation;
-    Operation.prototype.evaluate = function(...args) {
+    Operation.prototype.evaluate = function (...args) {
         return evaluateFunc(...this.operands.map(operand => operand.evaluate(...args)));
     };
-    Operation.prototype.toString = function() {
+    Operation.prototype.toString = function () {
         return this.operands.map(operand => operand.toString()).join(" ") + " " + symbol;
     };
-    Operation.prototype.prefix = function() {
+    Operation.prototype.prefix = function () {
         return "(" + symbol + " " + this.operands.map(operand => operand.prefix()).join(" ") + ")";
     };
-    operations.set(symbol, [Operation, arity]);
+    operations.set(symbol, [Operation, evaluateFunc.length]);
     return Operation;
 }
 
-const Add = operationFactory((...args) => args.reduce((a, b) => a + b), "+", 2);
+const Add = operationFactory((a, b) => a + b, "+");
 
-const Subtract = operationFactory((...args) => args.reduce((a, b) => a - b), "-", 2);
+const Subtract = operationFactory((a, b) => a - b, "-");
 
-const Multiply = operationFactory((...args) => args.reduce((a, b) => a * b), "*", 2);
+const Multiply = operationFactory((a, b) => a * b, "*");
 
-const Divide = operationFactory((...args) => args.reduce((a, b) => a / b), "/", 2);
+const Divide = operationFactory((a, b) => a / b, "/");
 
-const Negate = operationFactory(a => -a, "negate", 1);
+const Negate = operationFactory(a => -a, "negate");
 
-const Sinh = operationFactory(Math.sinh, "sinh", 1);
+const Sinh = operationFactory(Math.sinh, "sinh");
 
-const Cosh = operationFactory(Math.cosh, "cosh", 1);
+const Cosh = operationFactory(Math.cosh, "cosh");
 
-const Product = operationFactory((...args) => args.reduce((a, b) => a * b, 1), "product", undefined);
+const Product = operationFactory((...args) => args.reduce((a, b) => a * b, 1), "product");
 
 const Geom = operationFactory((...args) => {
     const product = args.reduce((a, b) => Math.abs(a * b), 1);
     return Math.pow(product, 1 / args.length);
-}, "geom", undefined);
+}, "geom");
 
 function parse(expression) {
     const tokens = expression.split(" ").filter(token => token.length);
@@ -78,7 +90,6 @@ function parse(expression) {
     });
     return stack.pop();
 }
-
 
 function customErrorFactory(name) {
     function CustomError(message) {
@@ -143,8 +154,8 @@ function parsePrefix(expression) {
             if (operations.get(op) === undefined) {
                 throw new UnknownOperationError("Unknown operation: " + op);
             }
-            if (operations.get(op)[1] !== undefined && operands.length !== operations.get(op)[1]) {
-                throw new InvalidArgumentsError(`Operation ${op} should have ${operations[op][1]} operands`);  // :NOTE: which op?
+            if (operations.get(op)[1] !== 0 && operands.length !== operations.get(op)[1]) {
+                throw new InvalidArgumentsError(`Operation "${op}" should have ${operations.get(op)[1]} operands`);
             }
             const operationSignature = operations.get(op);
             const Op = operationSignature[0];
