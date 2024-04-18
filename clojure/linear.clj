@@ -7,7 +7,8 @@
       (mapv (create-operation op) arg1 arg2))))
 
 
-(def v+ (create-operation +))
+(defn v+ [v1 v2]
+  ((create-operation +) v1 v2))
 
 (defn v- [v1 v2]
   ((create-operation -) v1 v2))
