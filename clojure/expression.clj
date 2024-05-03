@@ -1,57 +1,116 @@
-(defn create-operation [op]
-  (fn [& operands]
-    (fn [vars_map]
-      (apply op (mapv (fn [f] (f vars_map)) operands)))))
+(def ops-func-map (atom {}))
+
+(defn add-to-map [map op fobj]
+  (swap! map assoc op fobj))
+
+(defn create-operation [op op-str]
+  (let [operation (fn [& operands]
+                    (fn [vars_map]
+                      (apply op (mapv (fn [f] (f vars_map)) operands))))]
+    (add-to-map ops-func-map op-str operation)
+    operation))
 
 (defn constant [c]
-  (fn [_] c))
+  (constantly c))
 
 (defn variable [v]
   (fn [vars_map] (get vars_map v)))
 
-(def add (create-operation +))
+(def add (create-operation + '+))
 
-(def subtract (create-operation -))
+(def subtract (create-operation - '-))
 
-(def multiply (create-operation *))
+(def multiply (create-operation * '*))
+(def divide (let [div (fn [operand1 operand2]
+              (fn [vars_map]
+                (let [op1 (operand1 vars_map)
+                      op2 (operand2 vars_map)]
+                  (if (zero? op2)
+                    (if (neg? op1)
+                      Double/NEGATIVE_INFINITY
+                      Double/POSITIVE_INFINITY)
+                    (double (/ op1 op2)))
+                  )))]
+    (add-to-map ops-func-map '/ div) div))
 
-(defn divide [operand1 operand2]
-  (fn [vars_map]
-    (let [op1 (operand1 vars_map)
-          op2 (operand2 vars_map)]
-      (cond
-        (and (= op2 0.0) (>= op1 0)) Double/POSITIVE_INFINITY
-        (and (= op2 0.0) (< op1 0)) Double/NEGATIVE_INFINITY
-        :else (double (/ op1 op2)))
-    )))
+(def negate (create-operation - 'negate))
 
-(def negate (create-operation -))
+(def sinh (create-operation #(Math/sinh %) 'sinh))
 
-(def sinh (create-operation (fn [operand] (Math/sinh operand))))
+(def cosh (create-operation #(Math/cosh %) 'cosh))
 
-(def cosh (create-operation (fn [operand] (Math/cosh operand))))
-
-(def operations {'+ add
-                 '- subtract
-                 '* multiply
-                 '/ divide
-                 'negate negate
-                 'sinh sinh
-                 'cosh cosh
-                 })
-
-(defn parseFunction [expression]
+(defn createParser [expression map const-impl variable-impl]
   (letfn [(parse [expr]
             (cond
               (list? expr)
-              (let [op (get operations (first expr))
-                    args (mapv parse (rest expr))]
-                (fn [vars_map]
-                  ((apply op args) vars_map)))
+              (let [op-symbol (first expr) op (get @map op-symbol) args (mapv parse (rest expr))]
+                (apply op args))
               (number? expr)
-              (constant expr)
-              :else (variable (str expr))
-            ))]
+              (const-impl expr)
+              :else (variable-impl (str expr))))]
     (parse (read-string expression))))
 
+(defn parseFunction [expression] (createParser expression ops-func-map constant variable))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(load-file "proto.clj")
+
+(def ops-obj-map (atom {}))
+
+(defn expr-interface [eval to-str]
+  {:evaluate eval
+   :toString to-str})
+
+(def evaluate (method :evaluate))
+(def toString (method :toString))
+
+(defn createOp [op op-eval]
+  (let [operation (constructor
+    (fn [this & operands]
+      (assoc this :operands operands))
+    (expr-interface
+      (fn [this vars]
+        (apply op-eval (map #(evaluate % vars) (:operands this))))
+      (fn [this]
+        (let [ops-str (mapv toString (:operands this))]
+          (str "(" op " " (clojure.string/join " " ops-str) ")")))))]
+    (add-to-map ops-obj-map op operation) operation))
+
+(def Constant
+  (constructor
+    (fn [this val]
+      (assoc this :value val))
+    (expr-interface
+      (fn [this _] (:value this))
+      (fn [this] (str (:value this))))))
+
+(def Variable
+  (constructor
+    (fn [this name]
+      (assoc this :name name))
+    (expr-interface
+      (fn [this vars]
+        (get vars (:name this)))
+      (fn [this] (:name this)))))
+
+(def Add (createOp '+ +))
+
+(def Subtract (createOp '- -))
+
+(def Multiply (createOp '* *))
+
+(def Divide (createOp '/ (fn [a b]
+                           (if (zero? b)
+                             (if (neg? a)
+                               Double/NEGATIVE_INFINITY
+                               Double/POSITIVE_INFINITY)
+                             (double (/ a b))))))
+
+(def Negate (createOp 'negate -))
+
+(def Pow (createOp 'pow (fn [base exp] (Math/pow base exp))))
+
+(def Log (createOp 'log (fn [base arg] (/ (Math/log (abs arg)) (Math/log (abs base))))))
+
+(defn parseObject [expression] (createParser expression ops-obj-map Constant Variable))
 
