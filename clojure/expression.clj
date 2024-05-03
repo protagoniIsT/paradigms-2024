@@ -21,6 +21,7 @@
 (def subtract (create-operation - '-))
 
 (def multiply (create-operation * '*))
+
 (def divide (let [div (fn [operand1 operand2]
               (fn [vars_map]
                 (let [op1 (operand1 vars_map)
