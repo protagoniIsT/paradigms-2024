@@ -22,17 +22,7 @@
 
 (def multiply (create-operation * '*))
 
-(def divide (let [div (fn [operand1 operand2]
-              (fn [vars_map]
-                (let [op1 (operand1 vars_map)
-                      op2 (operand2 vars_map)]
-                  (if (zero? op2)
-                    (if (neg? op1)
-                      Double/NEGATIVE_INFINITY
-                      Double/POSITIVE_INFINITY)
-                    (double (/ op1 op2)))
-                  )))]
-    (add-to-map ops-func-map '/ div) div))
+(def divide (create-operation (fn [a b] (/ (double a) (double b))) '/))
 
 (def negate (create-operation - 'negate))
 
