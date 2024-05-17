@@ -90,12 +90,7 @@
 
 (def Multiply (createOp '* *))
 
-(def Divide (createOp '/ (fn [a b]
-                           (if (zero? b)
-                             (if (neg? a)
-                               Double/NEGATIVE_INFINITY
-                               Double/POSITIVE_INFINITY)
-                             (double (/ a b))))))
+(def Divide (createOp '/ (fn [a b] (/ (double a) (double b)))))
 
 (def Negate (createOp 'negate -))
 
