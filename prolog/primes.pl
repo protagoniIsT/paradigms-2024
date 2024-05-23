@@ -11,6 +11,7 @@ validate_div_list([H, N | T]) :- H =< N, prime(H), validate_div_list([N | T]).
 
 prime_divisors(1, []) :- !.
 prime_divisors(N, Divisors) :- number(N), N > 1, !, find_divisors(N, 2, Divisors), validate_div_list(Divisors).
+prime_divisors(N, Divisors) :- var(N), !, divs_prod(Divisors, N), validate_div_list(Divisors).
 
 find_divisors(1, _, []) :- !.
 find_divisors(N, H, [H | T]) :- 0 is mod(N, H), ND is div(N, H), !, find_divisors(ND, H, T).
@@ -18,6 +19,9 @@ find_divisors(N, F, Divisors) :- next_prime(F, FP), find_divisors(N, FP, Divisor
 
 next_prime(F, R) :- R is F + 1, prime(R), !.
 next_prime(F, R) :- F1 is F + 1, next_prime(F1, R).
+
+divs_prod([], 1).
+divs_prod([H | T], N) :- divs_prod(T, NT), N is H * NT.
 
 prime_index(P, I) :- prime(P), prime_idx_rec(2, P, 1, I).
 prime_idx_rec(C, C, I, I).
